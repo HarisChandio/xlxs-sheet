@@ -12,9 +12,7 @@ getSchedule().then();
 router.get("/course/:id", (req, res) => {
   const course = req.params.id;
   const result = Search(course, scheduleArray);
-  res.status(200).json({
-    course: result,
-  });
+  res.status(200).json(result);
 });
 
 router.get("/courses", (req, res) => {

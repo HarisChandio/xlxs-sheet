@@ -9,7 +9,7 @@ async function getSchedule() {
 
 getSchedule().then();
 
-router.get("/schedule", async (req, res) => {
+router.get("/schedule", (req, res) => {
   try {
     res.status(200).json({
       schedule: scheduleArray,
@@ -19,14 +19,14 @@ router.get("/schedule", async (req, res) => {
   }
 });
 
-router.get("/schedule/:day", async (req, res) => {
- try {
-  const day = req.params.day;
-  const result = Search(day, scheduleArray);
-  res.status(200).json(result)
- } catch (error) {
-    console.log(error)
- }
+router.get("/schedule/:day", (req, res) => {
+  try {
+    const day = req.params.day;
+    const result = Search(day, scheduleArray);
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 router.get("/schedule/:day/:venue", (req, res) => {
@@ -40,20 +40,22 @@ router.get("/schedule/:day/:venue", (req, res) => {
           item.venue.toString().toLowerCase() === venue.toLowerCase()
         );
       });
-    
+
       return filteredData;
     };
-    
-    const result = searchQuery(day,venue, scheduleArray);
+
+    const result = searchQuery(day, venue, scheduleArray);
 
     if (result.length > 0) {
       res.status(200).json({
         day: day,
         venue: venue,
-        schedule: result
+        schedule: result,
       });
     } else {
-      res.status(404).json({ message: "No schedule found for the specified day and venue" });
+      res
+        .status(404)
+        .json({ message: "No schedule found for the specified day and venue" });
     }
   } catch (error) {
     console.log(error);
@@ -61,14 +63,13 @@ router.get("/schedule/:day/:venue", (req, res) => {
   }
 });
 
-
-router.get("/schedule/:venue", (req,res)=>{
+router.get("/schedule/:venue", (req, res) => {
   try {
     const venue = req.params.id;
     const result = Search(venue, scheduleArray);
-    res.status(200).json(result)
+    res.status(200).json(result);
   } catch (error) {
-    console.log(error)
-  } 
-})
+    console.log(error);
+  }
+});
 module.exports = router;

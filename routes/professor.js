@@ -12,9 +12,8 @@ getSchedule().then();
 router.get("/prof/:id", (req, res) => {
   const prof = req.params.id;
   const result = Search(prof, scheduleArray);
-  res.status(200).json({
-    prof: result,
-  });
+
+  res.status(200).json({ [prof]: result});
 });
 
 router.get("/profs", (req, res) => {
