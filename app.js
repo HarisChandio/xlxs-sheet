@@ -1,43 +1,141 @@
-const xlsx = require('node-xlsx');
+const fs = require("fs");
+const Excel = require("exceljs");
 
-// Load the xlsx file directly
-let workSheetsFromFile = xlsx.parse(`${__dirname}/file.xlsx`);
+const workbook = new Excel.Workbook();
+const file = fs.readFileSync(`${__dirname}/file.xlsx`);
 
-// Extract data from the parsed xlsx file
-const rawData = workSheetsFromFile[0].data;
+const read = async () => {
+  try {
+    await workbook.xlsx.load(file);
+    const worksheet = workbook.getWorksheet("Spring-2024");
+    let scheduleArray = [];
 
-// Initialize the timetable object
-const timetable = {};
-
-// Initialize variables to store the current day and time slots
-let currentDay;
-let timeSlots;
-
-// Iterate through the rawData to parse and structure the timetable
-for (let i = 0; i < rawData.length; i++) {
-    const row = rawData[i];
-    // Check if it's a day row
-    if (row.length === 1) {
-        currentDay = row[0];
-        timetable[currentDay] = {};
-    }
-    // Check if it's a time slot row
-    else if (row.length > 1 && row[2]) {
-        timeSlots = row.slice(2); // Extract time slots excluding 'Venue' and empty items
-        // Remove 'Venue' from the timeSlots array
-        timeSlots.shift();
-    }
-    // Check if it's a room row
-    else if (row.length > 1 && row[0].startsWith('Room-')) {
-        const roomName = row[0];
-        for (let j = 2; j < row.length; j++) {
-            const time = timeSlots[j - 2]; // Get the corresponding time slot
-            if (!timetable[currentDay][time]) {
-                timetable[currentDay][time] = {};
+    for (let a = 0; a < 6; a++) {
+        let rows = worksheet.getRows(2 + a * 28, (a + 1) * 28);
+        let tempObj = {
+          subject: "",
+          venue: "",
+          slot: "",
+          day: "",
+        };
+        let slotMap = [];
+        let rowIndex = 0;
+        tempObj.day = rows[0].values[1];
+        rowIndex++;
+        for (let i = 3; i < 6; i++) {
+          slotMap.push(rows[1].values[i]);
+        }
+        rowIndex++;
+  
+        for (let i = rowIndex; i < rows.length; i++) {
+          tempObj.venue = rows[i].values[1];
+          for (let j = 3; j < 6; j++) {
+            if (rows[i].values[j]) {
+              let subject = rows[i].values[j];
+        
+              // Extract teacher name
+              let teacherNames = [];
+              if (typeof subject === "string") {
+                const regex = /(Mr\.|Ms\.|Mrs\.|Dr\.)\s[A-Z][a-z]+(\s[A-Z][a-z]+)?/g;
+                const matches = subject.match(regex);
+                if (matches) {
+                  teacherNames = matches;
+                  subject = subject.replace(matches[0], '').trim(); // Remove teacher name from subject
+                }
+              }
+        
+              tempObj.subject = subject;
+              tempObj.slot = slotMap[j - 3];
+              tempObj.teacher = teacherNames.length > 0 ? teacherNames[0] : ''; // Assuming only one teacher is mentioned
+              scheduleArray.push({ ...tempObj });
             }
-            timetable[currentDay][time][roomName] = row[j]; // Assign subject to the room at the corresponding time
+          }
         }
     }
-}
+  
+      
+      // Remove the commented-out code for extracting teacher names
+      
 
-console.log(timetable);
+    //console.log(JSON.stringify(scheduleArray, null, 2));
+
+    const data = scheduleArray;
+    let classNames = [];
+    data.forEach((item) => {
+      const subject = item.subject;
+
+      if (typeof subject === "object" && subject.richText) {
+        const text = subject.richText.map((textObj) => textObj.text).join("");
+
+        const regex = /([A-Z]{3,4}-\d+[A-Z]?)/g;
+        const matches = text.match(regex);
+        if (matches) {
+          classNames = classNames.concat(matches);
+
+        }
+      } else if (typeof subject === "string") {
+        const regex = /([A-Z]{3,4}-\d+[A-Z]?)/g;
+        const matches = subject.match(regex);
+        if (matches) {
+          classNames = classNames.concat(matches);
+        }
+      }
+    });
+
+    classNames = [...new Set(classNames)];
+
+//     let teacherNames = [];
+//     data.forEach((item) => {
+//       const subject = item.subject;
+
+//       if (typeof subject === "object" && subject.richText) {
+//         const text = subject.richText.map((textObj) => textObj.text).join("");
+
+//         const regex = /(Mr\.|Ms\.|Mrs\.|Dr\.)\s[A-Z][a-z]+(\s[A-Z][a-z]+)?/g;
+//         const matches = text.match(regex);
+//         if (matches) {
+//           teacherNames = teacherNames.concat(matches);
+//         }
+//       } else if (typeof subject === "string") {
+//         const regex = /(Mr\.|Ms\.|Mrs\.|Dr\.)\s[A-Z][a-z]+(\s[A-Z][a-z]+)?/g;
+//         const matches = subject.match(regex);
+//         if (matches) {
+//           teacherNames = teacherNames.concat(matches);
+//         }
+//       }
+//     });
+// l
+//     teacherNames = [...new Set(teacherNames)];
+
+    //console.log(teacherNames);
+    // const result = searchQuery("BBA-4A", scheduleArray);
+    // console.log(result);
+    const demo = {};
+    classNames.forEach((course) => {
+      let searchData = searchQuery(course, scheduleArray);
+      demo[course] = searchData;
+    });
+
+    fs.writeFile(`${__dirname}/demo.json`, JSON.stringify(demo), () => {
+      console.log("done");
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const searchQuery = (query, data) => {
+  let filteredData = data.filter((item) => {
+    return item.subject.toString().toLowerCase().includes(query.toLowerCase());
+  });
+  let queryResult = {};
+  filteredData.forEach((item) => {
+    if (item.day in queryResult) {
+      queryResult[item.day].push(item);
+    } else {
+      queryResult[item.day] = [item];
+    }
+  });
+  return queryResult;
+};
+read();
