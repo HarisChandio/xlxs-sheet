@@ -1,7 +1,14 @@
 const searchQuery = (query, data) => {
   let filteredData = data.filter((item) => {
-    return item.subject.toString().toLowerCase().includes(query.toLowerCase());
+    // Check if the subject, day, or venue exact match the query
+    return (
+      item.subject.toString().toLowerCase().includes(query.toLowerCase()) ||
+      item.day.toString().toLowerCase().includes(query.toLowerCase()) ||
+      item.venue.toString().toLowerCase() === query.toLowerCase()
+    );
   });
+
+  // Group filtered data by day
   let queryResult = {};
   filteredData.forEach((item) => {
     if (item.day in queryResult) {
@@ -10,8 +17,8 @@ const searchQuery = (query, data) => {
       queryResult[item.day] = [item];
     }
   });
+
   return queryResult;
 };
-
 
 module.exports = searchQuery;
