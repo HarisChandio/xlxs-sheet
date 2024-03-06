@@ -32,30 +32,26 @@ const read = async () => {
           for (let j = 3; j < 6; j++) {
             if (rows[i].values[j]) {
               let subject = rows[i].values[j];
-        
-              // Extract teacher name
+      
               let teacherNames = [];
               if (typeof subject === "string") {
                 const regex = /(Mr\.|Ms\.|Mrs\.|Dr\.)\s[A-Z][a-z]+(\s[A-Z][a-z]+)?/g;
                 const matches = subject.match(regex);
                 if (matches) {
                   teacherNames = matches;
-                  subject = subject.replace(matches[0], '').trim(); // Remove teacher name from subject
+                  subject = subject.replace(matches[0], '').trim(); 
                 }
               }
         
               tempObj.subject = subject;
               tempObj.slot = slotMap[j - 3];
-              tempObj.teacher = teacherNames.length > 0 ? teacherNames[0] : ''; // Assuming only one teacher is mentioned
+              tempObj.teacher = teacherNames.length > 0 ? teacherNames[0] : ''; 
               scheduleArray.push({ ...tempObj });
             }
           }
         }
     }
-  
-      
-      // Remove the commented-out code for extracting teacher names
-      
+    
 
     //console.log(JSON.stringify(scheduleArray, null, 2));
 
@@ -123,6 +119,7 @@ const read = async () => {
     console.log(error);
   }
 };
+
 
 const searchQuery = (query, data) => {
   let filteredData = data.filter((item) => {

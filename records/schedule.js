@@ -9,7 +9,7 @@ const schedule = async () => {
     await workbook.xlsx.load(file);
     const worksheet = workbook.getWorksheet('Spring-2024')
     let scheduleArray = [];
-
+    
     for(let a = 0; a<6; a++) {
       let rows = worksheet.getRows(2+a*28, 28);
       let tempObj = {
